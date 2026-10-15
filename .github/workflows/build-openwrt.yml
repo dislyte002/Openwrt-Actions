@@ -105,9 +105,19 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
+      - name: Upgrade CMake to 3.31
+        run: |
+          # 下载 CMake 3.31.7 官方二进制包
+          curl -LO https://cmake.org/files/v3.31/cmake-3.31.7-linux-x86_64.sh
+          sudo bash cmake-3.31.7-linux-x86_64.sh --skip-license --prefix=/usr/local
+          # 验证版本
+          cmake --version
+          echo "PATH=/usr/local/bin:$PATH" >> $GITHUB_ENV
+
       - name: Download package
         id: package
         run: |
+          export PATH=/usr/local/bin:$PATH
           cd openwrt
           make defconfig
           make download -j8
@@ -117,6 +127,7 @@ jobs:
       - name: Compile the firmware
         id: compile
         run: |
+          export PATH=/usr/local/bin:$PATH
           cd openwrt
           echo -e "$(nproc) thread compile"
           make -j$(nproc) || make -j1 || make -j1 V=s
