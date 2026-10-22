@@ -140,6 +140,15 @@ jobs:
           # 验证版本
           $CMAKE --version
           
+      - name: Force OpenWrt internal CMake to 3.31
+        run: |
+          # 把 LEDE 自带 tools/cmake 的版本直接抬到 3.31.7
+          sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:=3.31.7/' tools/cmake/Makefile
+          # 清掉旧缓存，逼它用新版本重新编译宿主 cmake
+          rm -rf build_dir/host/cmake-* staging_dir/host/cmake-*
+          # 校验改后的版本
+          grep PKG_VERSION tools/cmake/Makefile
+          
       - name: Compile the firmware
         id: compile
         run: |
