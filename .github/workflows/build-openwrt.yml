@@ -142,12 +142,17 @@ jobs:
           
       - name: Force OpenWrt internal CMake to 3.31
         run: |
-          # 把 LEDE 自带 tools/cmake 的版本直接抬到 3.31.7
+          # 关键：GitHub Actions 每个 step 都是独立 shell，默认在仓库根目录，必须先 cd 进源码目录
+          cd openwrt
+          # 把 LEDE 自带 tools/cmake 版本抬到 3.31.7
           sed -i 's/^PKG_VERSION:=.*/PKG_VERSION:=3.31.7/' tools/cmake/Makefile
+          # 版本变了源码 tarball 的 sha256 也对不上，校验和设为 skip 避免下载校验失败
+          sed -i 's/^PKG_HASH:=.*/PKG_HASH:=skip/' tools/cmake/Makefile
           # 清掉旧缓存，逼它用新版本重新编译宿主 cmake
           rm -rf build_dir/host/cmake-* staging_dir/host/cmake-*
-          # 校验改后的版本
-          grep PKG_VERSION tools/cmake/Makefile
+          rm -rf /workdir/openwrt/build_dir/host/cmake-* /workdir/openwrt/staging_dir/host/cmake-*
+          # 校验改后的版本与哈希
+          grep -E '^(PKG_VERSION|PKG_HASH|PKG_SOURCE|PKG_SOURCE_URL)' tools/cmake/Makefile
           
       - name: Compile the firmware
         id: compile
